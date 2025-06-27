@@ -6,11 +6,11 @@ const app = express();
 const port = 3812;
 
 const pool = new Pool({
-    user: 'postgres',
-    host: 'postgres',
-    database: 'job_post',
-    password: 'admin234',
-    port: 5432,
+    user: process.env.DB_USER || 'postgres',
+    host: process.env.DB_HOST || 'postgres',
+    database: process.env.DB_NAME || 'job_post',
+    password: process.env.DB_PASSWORD || 'admin234',
+    port: process.env.DB_PORT || 5432,
 });
 
 app.use(cors());

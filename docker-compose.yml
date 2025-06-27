@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: veera_job_posting_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin234
+      POSTGRES_DB: job_post
+    ports:
+      - "5876:5432"  # External port 5876 maps to internal 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./Backend
+    container_name: veera_job_posting_backend
+    ports:
+      - "3812:3812"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: admin234
+      DB_HOST: postgres  # Uses service name for internal DNS
+      DB_NAME: job_post
+      DB_PORT: 5432      # Internal container port
+    restart: unless-stopped
+
+  frontend:
+    build: ./Fronted
+    container_name: veera_job_posting_frontend
+    ports:
+      - "8098:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  hr:
+    build: ./Hr
+    container_name: veera_job_posting_hr
+    ports:
+      - "8099:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
